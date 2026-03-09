@@ -41,10 +41,15 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<CampaignRow | null>(null);
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterPlatform, setFilterPlatform] = useState('');
 
   const fetchData = async () => {
     try {
-      const res = await fetch('/api/marketing/campaigns');
+      const params = new URLSearchParams();
+      if (filterStatus) params.set('status', filterStatus);
+      if (filterPlatform) params.set('type', filterPlatform);
+      const res = await fetch(`/api/marketing/campaigns?${params}`);
       if (!res.ok) return;
       const data = await res.json();
       setCampaigns(data.campaigns ?? []);
@@ -58,7 +63,7 @@ export default function CampaignsPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [filterStatus, filterPlatform]);
 
   const openNew = () => {
     setEditing(null);
@@ -91,6 +96,21 @@ export default function CampaignsPage() {
         </Button>
       </div>
       <SubNav />
+
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+          <option value="">All statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{campaignStatusConfig[s].label}</option>
+          ))}
+        </select>
+        <select value={filterPlatform} onChange={(e) => setFilterPlatform(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+          <option value="">All platforms</option>
+          {PLATFORMS.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -197,8 +217,20 @@ export default function CampaignsPage() {
                         <td className="py-3 px-4 tabular-nums">${cpl(c)}</td>
                         <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{c.start_date ?? '—'}</td>
                         <td className="py-3 px-4">
-                          <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="text-violet-600 dark:text-violet-400 hover:underline">
+                          <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="text-violet-600 dark:text-violet-400 hover:underline mr-2">
                             Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (!confirm('Delete this campaign?')) return;
+                              const res = await fetch(`/api/marketing/campaigns/${c.id}`, { method: 'DELETE' });
+                              if (res.ok) fetchData();
+                            }}
+                            className="text-red-600 dark:text-red-400 hover:underline"
+                          >
+                            Delete
                           </button>
                         </td>
                       </tr>

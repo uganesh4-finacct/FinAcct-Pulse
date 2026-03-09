@@ -91,6 +91,32 @@
   background: #64748b;
 }
 
+/* Org chart expand/collapse animation */
+.org-chart-children {
+  animation: orgChartSlideDown 0.2s ease-out;
+}
+
+@keyframes orgChartSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .org-chart-card-inner {
+    width: 100% !important;
+  }
+  .org-chart-children {
+    margin-left: 1rem;
+    padding-left: 1rem;
+  }
+}
+
 /* Smooth transitions for theme toggle + base reset */
 * {
   box-sizing: border-box;

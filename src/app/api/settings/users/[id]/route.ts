@@ -94,3 +94,24 @@ export async function PATCH(
 
   return NextResponse.json({ success: true })
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const roleData = await getUserRole()
+  if (!roleData || roleData.role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  const { id } = await params
+  if (id === roleData.team_member_id) {
+    return NextResponse.json({ error: 'Cannot deactivate yourself' }, { status: 400 })
+  }
+  const supabase = createServiceSupabase()
+  const { error } = await supabase
+    .from('team_members')
+    .update({ active: false, status: 'inactive' })
+    .eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}

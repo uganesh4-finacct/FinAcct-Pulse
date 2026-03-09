@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     department,
     reportsToId,
     globalRole,
+    entity: entityInput,
     moduleAccess = [],
     actions = [],
     sensitiveAccess = [],
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
 
   const email = String(rawEmail).trim().toLowerCase()
   const fullEmail = email.includes('@') ? email : `${email}@finacctsolutions.com`
+  const entity = entityInput === 'india' ? 'india' : 'us'
 
   const supabase = createServiceSupabase()
   const pulseRole = mapUserRoleToPulseRole(globalRole || 'contributor')
@@ -39,7 +41,7 @@ export async function POST(req: Request) {
       email: fullEmail,
       role: pulseRole,
       role_title: globalRole === 'admin' ? 'Admin' : globalRole === 'manager' ? 'Manager' : 'Contributor',
-      entity: 'us',
+      entity,
       active: false,
       status: 'invited',
       department: department || null,

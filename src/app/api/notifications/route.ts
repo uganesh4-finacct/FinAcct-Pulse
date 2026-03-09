@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const supabase = createServiceSupabase()
   const { searchParams } = new URL(request.url)
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)))
+  const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10))
   const readFilter = searchParams.get('read')
   const category = searchParams.get('category')
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     .select('id, type_id, type_code, title, message, link_url, read, created_at')
     .eq('user_id', user.team_member_id)
     .order('created_at', { ascending: false })
-    .limit(limit)
+    .range(offset, offset + limit - 1)
 
   if (readFilter === 'true') q = q.eq('read', true)
   else if (readFilter === 'false') q = q.eq('read', false)
@@ -38,8 +39,11 @@ export async function GET(request: NextRequest) {
     .eq('user_id', user.team_member_id)
     .eq('read', false)
 
+  const hasMore = list.length === limit
+
   return NextResponse.json({
     notifications: list,
     unreadCount: unreadCount ?? 0,
+    hasMore,
   })
 }

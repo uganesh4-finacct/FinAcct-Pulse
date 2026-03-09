@@ -120,7 +120,7 @@ export default async function HRRequisitionDetailPage({ params }: { params: Prom
           <div style={{ padding: '14px 20px', borderBottom: '1px solid #f4f4f5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: '#09090b' }}>Candidates ({candidates.length})</span>
             <Link
-              href={`/hr/candidates?requisition_id=${id}&add=1`}
+              href={`/hr/candidates/new${id ? `?requisition_id=${id}` : ''}`}
               style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', textDecoration: 'none' }}
             >
               + Add

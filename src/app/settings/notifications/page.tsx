@@ -21,6 +21,7 @@ export default function NotificationSettingsPage() {
   const [preferences, setPreferences] = useState<Prefs>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savedMessage, setSavedMessage] = useState(false)
 
   useEffect(() => {
     fetch('/api/settings/notification-preferences')
@@ -50,17 +51,22 @@ export default function NotificationSettingsPage() {
 
   const save = async () => {
     setSaving(true)
+    setSavedMessage(false)
     const prefsPayload = types.map((t) => ({
       type_id: t.id,
       email_enabled: getPref(t.id, 'email_enabled', t.default_email),
       in_app_enabled: getPref(t.id, 'in_app_enabled', t.default_in_app),
     }))
-    await fetch('/api/settings/notification-preferences', {
+    const res = await fetch('/api/settings/notification-preferences', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ preferences: prefsPayload }),
     })
     setSaving(false)
+    if (res.ok) {
+      setSavedMessage(true)
+      setTimeout(() => setSavedMessage(false), 3000)
+    }
   }
 
   const byCategory = types.reduce<Record<string, NotifType[]>>((acc, t) => {
@@ -137,10 +143,13 @@ export default function NotificationSettingsPage() {
               )
           )}
         </div>
-        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-zinc-700">
+        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-zinc-700 flex items-center gap-4">
           <Button variant="primary" onClick={save} disabled={saving}>
             {saving ? 'Saving...' : 'Save preferences'}
           </Button>
+          {savedMessage && (
+            <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Preferences saved.</span>
+          )}
         </div>
       </Card>
     </div>

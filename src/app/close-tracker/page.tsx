@@ -30,8 +30,9 @@ export default function CloseTrackerPage() {
   const [selectedClient, setSelectedClient] = useState<any | null>(null)
   const [panelSteps, setPanelSteps] = useState<Record<string, { status: string; notes: string }>>({})
   const [savingAll, setSavingAll] = useState(false)
+  const [generatingAll, setGeneratingAll] = useState(false)
 
-  const monthYear = typeof window !== 'undefined' ? new Date().toISOString().slice(0, 7) : ''
+  const [monthYear, setMonthYear] = useState(() => (typeof window !== 'undefined' ? new Date().toISOString().slice(0, 7) : ''))
 
   const fetchData = async () => {
     setLoadError(null)
@@ -101,6 +102,20 @@ export default function CloseTrackerPage() {
     setNewStepName('')
     setAddingClientId(null)
     await fetchData()
+  }
+
+  const generateAllForMonth = async () => {
+    setGeneratingAll(true)
+    try {
+      const res = await fetch('/api/close-tracker', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ month_year: monthYear }) })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json?.error ?? 'Failed to generate close records')
+      await fetchData()
+    } catch (e) {
+      setLoadError((e as Error).message ?? 'Failed to generate')
+    } finally {
+      setGeneratingAll(false)
+    }
   }
 
   const deleteCustomStep = async (stepId: string) => {
@@ -211,8 +226,45 @@ export default function CloseTrackerPage() {
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#09090b', letterSpacing: '-0.02em' }}>Close Tracker</h1>
         <p style={{ fontSize: '12.5px', color: '#71717a', marginTop: '3px' }}>
-          8-step monthly close · {monthYear} · All clients
+          8-step monthly close · All clients
         </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date(monthYear + '-01')
+                d.setMonth(d.getMonth() - 1)
+                setMonthYear(d.toISOString().slice(0, 7))
+              }}
+              style={{ padding: '6px 12px', border: '1px solid #e4e4e7', borderRadius: '8px', background: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#09090b' }}
+            >
+              ← Prev
+            </button>
+            <span style={{ minWidth: '120px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#09090b' }}>
+              {monthYear ? new Date(monthYear + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date(monthYear + '-01')
+                d.setMonth(d.getMonth() + 1)
+                setMonthYear(d.toISOString().slice(0, 7))
+              }}
+              style={{ padding: '6px 12px', border: '1px solid #e4e4e7', borderRadius: '8px', background: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#09090b' }}
+            >
+              Next →
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={generateAllForMonth}
+            disabled={generatingAll}
+            style={{ padding: '8px 16px', background: generatingAll ? '#a78bfa' : '#7c3aed', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: generatingAll ? 'wait' : 'pointer' }}
+          >
+            {generatingAll ? 'Generating...' : 'Generate All'}
+          </button>
+        </div>
       </div>
       <SubNav />
 

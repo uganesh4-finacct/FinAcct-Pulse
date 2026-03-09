@@ -24,4 +24,6 @@ export {
   TableHead,
   TableCell,
 } from './Table';
+export { SortableTable } from './SortableTable';
+export type { Column as SortableTableColumn, SortableTableProps } from './SortableTable';
 export { Tabs, TabsPills } from './Tabs';

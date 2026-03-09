@@ -18,6 +18,14 @@ function statusBadge(status: string, expiryDate: string | null) {
   return <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">Active</span>
 }
 
+function expiryColorClass(days: number | null): string {
+  if (days == null) return ''
+  if (days < 0) return 'text-red-600 font-medium'
+  if (days <= 30) return 'text-amber-600 font-medium'
+  if (days <= 90) return 'text-yellow-600'
+  return 'text-emerald-600'
+}
+
 function daysRemaining(date: string | null) {
   if (!date) return null
   const d = new Date(date)
@@ -28,6 +36,8 @@ function daysRemaining(date: string | null) {
 export default function ITDomainsPage() {
   const [list, setList] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState('')
+  const [registrarFilter, setRegistrarFilter] = useState('')
   const [detailId, setDetailId] = useState<string | null>(null)
   const [detail, setDetail] = useState<any | null>(null)
   const [addOpen, setAddOpen] = useState(false)
@@ -39,9 +49,12 @@ export default function ITDomainsPage() {
   })
 
   useEffect(() => {
-    fetch('/api/it/domains').then(r => r.json()).then(setList)
-    setLoading(false)
-  }, [])
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (statusFilter) params.set('status', statusFilter)
+    if (registrarFilter.trim()) params.set('registrar', registrarFilter.trim())
+    fetch(`/api/it/domains?${params}`).then(r => r.json()).then(data => { setList(data ?? []); setLoading(false) })
+  }, [statusFilter, registrarFilter])
 
   useEffect(() => {
     if (detailId) fetch(`/api/it/domains/${detailId}`).then(r => r.json()).then(setDetail).catch(() => setDetail(null))
@@ -82,7 +95,10 @@ export default function ITDomainsPage() {
       return
     }
     setAddOpen(false)
-    fetch('/api/it/domains').then(r => r.json()).then(setList)
+    const params = new URLSearchParams()
+    if (statusFilter) params.set('status', statusFilter)
+    if (registrarFilter.trim()) params.set('registrar', registrarFilter.trim())
+    fetch(`/api/it/domains?${params}`).then(r => r.json()).then(data => setList(data ?? []))
   }
 
   const handleSaveEdit = async () => {
@@ -102,7 +118,22 @@ export default function ITDomainsPage() {
     setEditId(null)
     setDetailId(null)
     setDetail(null)
-    fetch('/api/it/domains').then(r => r.json()).then(setList)
+    const params = new URLSearchParams()
+    if (statusFilter) params.set('status', statusFilter)
+    if (registrarFilter.trim()) params.set('registrar', registrarFilter.trim())
+    fetch(`/api/it/domains?${params}`).then(r => r.json()).then(data => setList(data ?? []))
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this domain?')) return
+    const r = await fetch(`/api/it/domains/${id}`, { method: 'DELETE' })
+    if (!r.ok) return
+    setDetailId(null)
+    setDetail(null)
+    const params = new URLSearchParams()
+    if (statusFilter) params.set('status', statusFilter)
+    if (registrarFilter.trim()) params.set('registrar', registrarFilter.trim())
+    fetch(`/api/it/domains?${params}`).then(res => res.json()).then(data => setList(data ?? []))
   }
 
   const activeCount = list.filter(d => d.status === 'active').length
@@ -128,6 +159,17 @@ export default function ITDomainsPage() {
         <div className="bg-white rounded-xl border border-zinc-200 p-4"><div className="text-xl font-bold">{activeCount}</div><div className="text-sm text-zinc-500">Active Domains</div></div>
         <div className="bg-white rounded-xl border border-amber-200 p-4"><div className="text-xl font-bold">{expiringSoon}</div><div className="text-sm text-zinc-500">Expiring Soon</div></div>
         <div className="bg-white rounded-xl border border-red-200 p-4"><div className="text-xl font-bold">{sslExpiringSoon}</div><div className="text-sm text-zinc-500">SSL Expiring Soon</div></div>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="expired">Expired</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="pending_renewal">Pending Renewal</option>
+        </select>
+        <input type="text" value={registrarFilter} onChange={e => setRegistrarFilter(e.target.value)} placeholder="Filter by registrar..." className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[180px]" />
       </div>
 
       <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
@@ -160,7 +202,7 @@ export default function ITDomainsPage() {
                   <td className="px-4 py-3 text-zinc-600">{row.registrar || '—'}</td>
                   <td className="px-4 py-3">
                     {row.expiry_date ? (
-                      <span className={cn(expDays != null && expDays < 30 ? 'text-amber-600 font-medium' : expDays != null && expDays < 0 ? 'text-red-600' : '')}>
+                      <span className={cn(expiryColorClass(expDays))}>
                         {new Date(row.expiry_date).toLocaleDateString()}
                         {expDays != null && expDays >= 0 && ` (${expDays}d)`}
                       </span>
@@ -170,7 +212,7 @@ export default function ITDomainsPage() {
                   <td className="px-4 py-3 text-zinc-600">{row.dns_provider || '—'}</td>
                   <td className="px-4 py-3">
                     {row.ssl_expiry_date ? (
-                      <span className={cn(sslDays != null && sslDays < 30 ? 'text-red-600' : '')}>
+                      <span className={cn(expiryColorClass(sslDays))}>
                         {new Date(row.ssl_expiry_date).toLocaleDateString()}
                       </span>
                     ) : '—'}
@@ -179,6 +221,7 @@ export default function ITDomainsPage() {
                   <td className="px-4 py-3 text-right font-mono">{row.annual_cost != null ? formatCurrency(row.annual_cost, row.currency as 'USD' | 'INR') : '—'}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDelete(row.id)}>Delete</Button>
                   </td>
                 </tr>
               )

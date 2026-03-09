@@ -36,9 +36,6 @@ export async function PATCH(req: Request, { params }: Params) {
     if (Object.prototype.hasOwnProperty.call(body, key)) payload[key] = body[key]
   }
   if (payload.invoice_month) payload.invoice_month = `${String(payload.invoice_month).slice(0, 7)}-01`
-  if (payload.invoiced_amount != null && payload.india_tp_amount === undefined) {
-    payload.india_tp_amount = Math.round(Number(payload.invoiced_amount) * 0.9 * 100) / 100
-  }
   payload.updated_at = new Date().toISOString()
   const { data, error } = await supabase.from('client_invoices').update(payload).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

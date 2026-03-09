@@ -20,6 +20,8 @@ export default async function ReferralsPage() {
         </Link>
       </div>
 
+      <p className="text-sm text-slate-500 mb-4">Add Referral and bonus tracking coming soon. Referral sources are populated from lead source data.</p>
+
       <div className="bg-white rounded border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead>

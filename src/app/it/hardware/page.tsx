@@ -30,9 +30,11 @@ const HARDWARE_TYPES = [
   { value: 'headset', label: 'Headset' },
   { value: 'webcam', label: 'Webcam' },
   { value: 'phone', label: 'Phone' },
+  { value: 'tablet', label: 'Tablet' },
   { value: 'printer', label: 'Printer' },
   { value: 'router', label: 'Router' },
   { value: 'server', label: 'Server' },
+  { value: 'network', label: 'Network' },
   { value: 'other', label: 'Other' },
 ]
 const STATUS_OPTIONS = [
@@ -58,9 +60,11 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   headset: Headphones,
   webcam: Camera,
   phone: Phone,
+  tablet: Box,
   printer: Printer,
   router: Router,
   server: Server,
+  network: Router,
   other: Box,
 }
 
@@ -89,8 +93,9 @@ function warrantyDisplay(date: string | null) {
   const d = new Date(date)
   const now = new Date()
   const days = Math.floor((d.getTime() - now.getTime()) / 86400000)
-  if (days < 0) return <span className="text-red-600">Expired</span>
-  if (days <= 30) return <span className="text-amber-600">Expiring ({days}d)</span>
+  if (days < 0) return <span className="text-red-600 font-medium">Expired</span>
+  if (days <= 30) return <span className="text-amber-600 font-medium">Expiring ({days}d)</span>
+  if (days <= 90) return <span className="text-yellow-600">{d.toLocaleDateString()}</span>
   return <span>{d.toLocaleDateString()}</span>
 }
 
@@ -102,6 +107,7 @@ export default function ITHardwarePage() {
   const [typeFilter, setTypeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [assignedFilter, setAssignedFilter] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [detailId, setDetailId] = useState<string | null>(null)
   const [detail, setDetail] = useState<any | null>(null)
   const [addOpen, setAddOpen] = useState(false)
@@ -135,6 +141,12 @@ export default function ITHardwarePage() {
     if (detailId) fetch(`/api/it/hardware/${detailId}`).then(r => r.json()).then(setDetail).catch(() => setDetail(null))
     else setDetail(null)
   }, [detailId])
+
+  useEffect(() => {
+    if (addOpen && form.entity) {
+      fetch(`/api/it/hardware/next-asset-tag?entity=${form.entity}`).then(r => r.json()).then(d => setForm(f => ({ ...f, asset_tag: d.suggested || '' })))
+    }
+  }, [addOpen, form.entity])
 
   const openAdd = () => {
     setForm({
@@ -210,6 +222,15 @@ export default function ITHardwarePage() {
   const spare = list.filter((x: any) => x.status === 'spare').length
   const inRepair = list.filter((x: any) => x.status === 'in_repair').length
 
+  const filteredList = searchQuery.trim()
+    ? list.filter((row: any) => {
+        const q = searchQuery.trim().toLowerCase()
+        const name = (row.name || row.asset || '').toLowerCase()
+        const tag = (row.asset_tag || row.asset || '').toLowerCase()
+        return name.includes(q) || tag.includes(q)
+      })
+    : list
+
   const assignedOptions = team.map(t => ({ value: t.id, label: t.name }))
 
   if (loading) return <div className="text-zinc-500 py-8">Loading...</div>
@@ -229,6 +250,13 @@ export default function ITHardwarePage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search by name or asset tag..."
+          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[200px]"
+        />
         <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All entities</option><option value="US">US</option><option value="India">India</option></select>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All types</option>{HARDWARE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All statuses</option>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
@@ -247,13 +275,14 @@ export default function ITHardwarePage() {
               <th className="px-4 py-3 text-left font-semibold text-zinc-700">Entity</th>
               <th className="px-4 py-3 text-left font-semibold text-zinc-700">Status</th>
               <th className="px-4 py-3 text-left font-semibold text-zinc-700">Condition</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-700">Purchase Date</th>
               <th className="px-4 py-3 text-left font-semibold text-zinc-700">Warranty</th>
               <th className="px-4 py-3 text-left font-semibold text-zinc-700">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {list.length === 0 && <tr><td colSpan={10} className="px-4 py-8 text-center text-zinc-500">No hardware. Add an asset.</td></tr>}
-            {list.map((row) => {
+            {filteredList.length === 0 && <tr><td colSpan={11} className="px-4 py-8 text-center text-zinc-500">No hardware. Add an asset.</td></tr>}
+            {filteredList.map((row) => {
               const Icon = TYPE_ICONS[row.type] || Box
               const assignedName = row.team_members?.name ?? (Array.isArray(row.team_members) ? row.team_members[0]?.name : null)
               return (
@@ -275,6 +304,7 @@ export default function ITHardwarePage() {
                   <td className="px-4 py-3"><span className={row.entity === 'india' ? 'text-violet-600' : 'text-blue-600'}>{row.entity === 'india' ? 'India' : row.entity === 'both' ? 'Both' : 'US'}</span></td>
                   <td className="px-4 py-3">{statusBadge(row.status)}</td>
                   <td className="px-4 py-3">{conditionBadge(row.condition)}</td>
+                  <td className="px-4 py-3 text-zinc-600">{row.purchase_date ? new Date(row.purchase_date).toLocaleDateString() : '—'}</td>
                   <td className="px-4 py-3">{warrantyDisplay(row.warranty_expiry)}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>Edit</Button>

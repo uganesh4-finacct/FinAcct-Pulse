@@ -8,8 +8,14 @@ export async function GET(req: Request) {
   if (!user || !canAccessIT(user.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+  const { searchParams } = new URL(req.url)
+  const status = searchParams.get('status')
+  const registrar = searchParams.get('registrar')
   const supabase = createServiceSupabase()
-  const { data, error } = await supabase.from('it_domains').select('*').order('domain')
+  let q = supabase.from('it_domains').select('*').order('expiry_date', { ascending: true })
+  if (status) q = q.eq('status', status)
+  if (registrar && registrar.trim()) q = q.ilike('registrar', `%${registrar.trim()}%`)
+  const { data, error } = await q
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data ?? [])
 }

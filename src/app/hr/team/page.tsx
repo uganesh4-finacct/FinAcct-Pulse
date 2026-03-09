@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react'
 import SubNav from '@/components/SubNav'
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
+import { SortableTable, type Column } from '@/components/ui/SortableTable'
 import { FieldRow, FieldInput, FieldSelect } from '@/components/FieldRow'
 import { Users, Building2, Network, Pencil, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EntitySection } from '@/components/EntitySection'
+import type { TeamMember } from '@/components/OrgChart'
 
 const MODULES = ['Operations', 'HR', 'Finance', 'IT', 'Sales', 'Marketing'] as const
 const ENTITY_OPTIONS = [
@@ -77,6 +80,22 @@ type Member = {
 }
 type HierarchyNode = { id: string; name: string; role: string; role_title: string | null; entity: string; reports_to_id: string | null; active: boolean; children: HierarchyNode[] }
 type ClientRow = { id: string; name: string; vertical: string; owner_name: string | null; reviewer_name: string | null; coordinator_name: string | null }
+
+function hierarchyToTeamMember(node: HierarchyNode, membersById: Map<string, Member>): TeamMember {
+  const m = membersById.get(node.id)
+  return {
+    id: node.id,
+    name: node.name,
+    role_title: node.role_title,
+    role: node.role,
+    email: m?.email,
+    location: m?.location,
+    entity: node.entity,
+    reports_to: node.reports_to_id,
+    active: node.active,
+    children: node.children.length > 0 ? node.children.map((c) => hierarchyToTeamMember(c, membersById)) : undefined,
+  }
+}
 
 export default function TeamDirectoryPage() {
   const [tab, setTab] = useState<'hierarchy' | 'by-client' | 'all'>('hierarchy')
@@ -269,9 +288,11 @@ export default function TeamDirectoryPage() {
     fetchByClient()
   }
 
-  const reportToOptions = members
-    .filter(m => m.id !== editMember?.id && m.entity === form.entity)
-    .map(m => ({ value: m.id, label: m.name }))
+  const reportToOptions = members.filter(
+    (m) => m.active && m.id !== editMember?.id
+  )
+  const reportToOptionsUs = reportToOptions.filter((m) => m.entity === 'us')
+  const reportToOptionsIndia = reportToOptions.filter((m) => m.entity === 'india')
 
   if (loading) {
     return (
@@ -317,28 +338,26 @@ export default function TeamDirectoryPage() {
       {/* Tab: Hierarchy */}
       {tab === 'hierarchy' && (
         <div className="space-y-8">
-          {(['us', 'india'] as const).map(entity => {
-            const roots = hierarchy.by_entity?.[entity] ?? []
-            return (
-              <div key={entity}>
-                <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-4">
-                  {entity === 'us' ? 'FinAcct Solutions US' : 'FinAcct Solutions India'}
-                </h2>
-                <div className="bg-white rounded-xl border border-zinc-200 p-6">
-                  {roots.length === 0 ? (
-                    <p className="text-zinc-500 text-sm">No team members</p>
-                  ) : (
-                    <HierarchyTree
-                      nodes={roots}
-                      onSelect={openDetail}
-                      roleBadgeClass={roleBadgeClass}
-                      membersById={new Map(members.map(m => [m.id, m]))}
-                    />
-                  )}
-                </div>
-              </div>
-            )
-          })}
+          <EntitySection
+            title="FinAcct Solutions US"
+            subtitle="United States Entity"
+            accentColor="blue"
+            data={(hierarchy.by_entity?.us ?? []).map((root) => hierarchyToTeamMember(root, new Map(members.map((m) => [m.id, m]))))}
+            onMemberClick={(node) => {
+              const full = members.find((m) => m.id === node.id)
+              openDetail(full ?? { id: node.id, name: node.name, email: null, phone: null, role: node.role, role_title: node.role_title, entity: node.entity, reports_to_id: null, reports_to_name: null, active: node.active !== false, client_count: 0 })
+            }}
+          />
+          <EntitySection
+            title="FinAcct Solutions India"
+            subtitle="India Entity"
+            accentColor="violet"
+            data={(hierarchy.by_entity?.india ?? []).map((root) => hierarchyToTeamMember(root, new Map(members.map((m) => [m.id, m]))))}
+            onMemberClick={(node) => {
+              const full = members.find((m) => m.id === node.id)
+              openDetail(full ?? { id: node.id, name: node.name, email: null, phone: null, role: node.role, role_title: node.role_title, entity: node.entity, reports_to_id: null, reports_to_name: null, active: node.active !== false, client_count: 0 })
+            }}
+          />
         </div>
       )}
 
@@ -349,45 +368,27 @@ export default function TeamDirectoryPage() {
             <select
               value={verticalFilter}
               onChange={e => setVerticalFilter(e.target.value)}
-              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
             >
               {VERTICAL_OPTIONS.map(o => (
                 <option key={o.value || 'all'} value={o.value}>{o.label}</option>
               ))}
             </select>
           </div>
-          <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 bg-zinc-50">
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Client</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Vertical</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Owner</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Reviewer</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Coordinator</th>
-                </tr>
-              </thead>
-              <tbody>
-                {byClient.map(c => (
-                  <tr
-                    key={c.id}
-                    onClick={() => setClientTeamFor(c)}
-                    className="border-b border-zinc-100 hover:bg-violet-50/50 cursor-pointer"
-                  >
-                    <td className="px-4 py-3 font-medium text-zinc-900">{c.name}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-700">
-                        {verticalLabel(c.vertical)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-600">{c.owner_name ?? '—'}</td>
-                    <td className="px-4 py-3 text-zinc-600">{c.reviewer_name ?? '—'}</td>
-                    <td className="px-4 py-3 text-zinc-600">{c.coordinator_name ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SortableTable<ClientRow>
+            tableId="hr-team-by-client"
+            data={byClient}
+            columns={[
+              { key: 'name', header: 'Client', sortable: true, render: (row) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{row.name}</span> },
+              { key: 'vertical', header: 'Vertical', sortable: true, groupable: true, render: (row) => <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">{verticalLabel(row.vertical)}</span> },
+              { key: 'owner_name', header: 'Owner', sortable: true, groupable: true, render: (row) => row.owner_name ?? '—' },
+              { key: 'reviewer_name', header: 'Reviewer', sortable: true, groupable: true, render: (row) => row.reviewer_name ?? '—' },
+              { key: 'coordinator_name', header: 'Coordinator', sortable: true, render: (row) => row.coordinator_name ?? '—' },
+            ]}
+            defaultSort={{ key: 'name', direction: 'asc' }}
+            onRowClick={c => setClientTeamFor(c)}
+            getRowId={c => c.id}
+          />
           {clientTeamFor && (
             <ClientTeamModal
               client={clientTeamFor}
@@ -401,72 +402,40 @@ export default function TeamDirectoryPage() {
       {tab === 'all' && (
         <div>
           <div className="flex gap-3 mb-4 flex-wrap">
-            <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+            <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
               <option value="">All entities</option>
               {ENTITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
               <option value="">All roles</option>
               {SYSTEM_ROLES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
               <option value="">All statuses</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
           </div>
-          <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 bg-zinc-50">
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Name</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Role Title</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Entity</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Location</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">System Role</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Clients</th>
-                  <th className="px-4 py-3 font-semibold text-zinc-700">Status</th>
-                  {canEdit && <th className="px-4 py-3 font-semibold text-zinc-700">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMembers.map(m => (
-                  <tr
-                    key={m.id}
-                    onClick={() => openDetail(m)}
-                    className="border-b border-zinc-100 hover:bg-violet-50/50 cursor-pointer"
-                  >
-                    <td className="px-4 py-3 font-medium text-zinc-900">{m.name}</td>
-                    <td className="px-4 py-3 text-zinc-600">{m.role_title ?? '—'}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn('inline-flex px-2 py-0.5 rounded text-xs font-medium', entityBadgeClass(m.entity))}>
-                        {m.entity === 'us' ? 'US' : 'India'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-600">{m.location ?? (m.entity === 'us' ? 'US' : 'India')}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn('inline-flex px-2 py-0.5 rounded text-xs font-medium', roleBadgeClass(m.role))}>
-                        {m.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-zinc-700">{m.client_count ?? 0}</td>
-                    <td className="px-4 py-3">
-                      <span className={m.active ? 'text-emerald-600 font-medium' : 'text-zinc-500'}>
-                        {m.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    {canEdit && (
-                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(m)}>
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SortableTable<Member>
+            tableId="hr-team-all-members"
+            data={filteredMembers}
+            columns={[
+              { key: 'name', header: 'Name', sortable: true, groupable: true, render: (m) => <span className="font-medium text-zinc-900 dark:text-zinc-100">{m.name}</span> },
+              { key: 'role_title', header: 'Role Title', sortable: true, render: (m) => m.role_title ?? '—' },
+              { key: 'entity', header: 'Entity', sortable: true, groupable: true, render: (m) => <span className={cn('inline-flex px-2 py-0.5 rounded text-xs font-medium', entityBadgeClass(m.entity))}>{m.entity === 'us' ? 'US' : 'India'}</span> },
+              { key: 'location', header: 'Location', sortable: true, groupable: true, render: (m) => m.location ?? (m.entity === 'us' ? 'US' : 'India') },
+              { key: 'role', header: 'System Role', sortable: true, groupable: true, render: (m) => <span className={cn('inline-flex px-2 py-0.5 rounded text-xs font-medium', roleBadgeClass(m.role))}>{m.role}</span> },
+              { key: 'client_count', header: 'Clients', sortable: true, render: (m) => <span className="font-mono text-zinc-700 dark:text-zinc-300">{m.client_count ?? 0}</span> },
+              { key: 'active', header: 'Status', sortable: true, groupable: true, render: (m) => <span className={m.active ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-zinc-500'}>{m.active ? 'Active' : 'Inactive'}</span> },
+              ...(canEdit
+                ? [{ key: 'actions', header: 'Actions', render: (m: Member) => <div onClick={e => e.stopPropagation()}><Button variant="ghost" size="sm" onClick={() => openEdit(m)}><Pencil className="w-3.5 h-3.5" /></Button></div> } as Column<Member>]
+                : []),
+            ]}
+            defaultSort={{ key: 'name', direction: 'asc' }}
+            onRowClick={openDetail}
+            rowClassName={() => 'cursor-pointer'}
+            getRowId={m => m.id}
+          />
         </div>
       )}
 
@@ -543,7 +512,25 @@ export default function TeamDirectoryPage() {
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase mb-3">Organization</h3>
                 <FieldRow label="Entity"><FieldSelect value={form.entity} onChange={v => setForm(f => ({ ...f, entity: v, location: v === 'india' ? 'India' : 'US' }))} options={ENTITY_OPTIONS} /></FieldRow>
                 <FieldRow label="Location"><FieldSelect value={form.location} onChange={v => setForm(f => ({ ...f, location: v }))} options={LOCATION_OPTIONS} /></FieldRow>
-                <FieldRow label="Reports To"><FieldSelect value={form.reports_to_id} onChange={v => setForm(f => ({ ...f, reports_to_id: v }))} options={[{ value: '', label: '—' }, ...reportToOptions]} /></FieldRow>
+                <FieldRow label="Reports To">
+                  <select
+                    value={form.reports_to_id}
+                    onChange={e => setForm(f => ({ ...f, reports_to_id: e.target.value }))}
+                    className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100"
+                  >
+                    <option value="">—</option>
+                    <optgroup label="US Team">
+                      {reportToOptionsUs.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="India Team">
+                      {reportToOptionsIndia.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </FieldRow>
               </section>
               <section>
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase mb-3">Module Access</h3>
@@ -593,7 +580,25 @@ export default function TeamDirectoryPage() {
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase mb-3">Organization</h3>
                 <FieldRow label="Entity"><FieldSelect value={form.entity} onChange={v => setForm(f => ({ ...f, entity: v, location: v === 'india' ? 'India' : 'US' }))} options={ENTITY_OPTIONS} /></FieldRow>
                 <FieldRow label="Location"><FieldSelect value={form.location} onChange={v => setForm(f => ({ ...f, location: v }))} options={LOCATION_OPTIONS} /></FieldRow>
-                <FieldRow label="Reports To"><FieldSelect value={form.reports_to_id} onChange={v => setForm(f => ({ ...f, reports_to_id: v }))} options={[{ value: '', label: '—' }, ...members.filter(m => m.entity === form.entity).map(m => ({ value: m.id, label: m.name }))]} /></FieldRow>
+                <FieldRow label="Reports To">
+                  <select
+                    value={form.reports_to_id}
+                    onChange={e => setForm(f => ({ ...f, reports_to_id: e.target.value }))}
+                    className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100"
+                  >
+                    <option value="">—</option>
+                    <optgroup label="US Team">
+                      {members.filter(m => m.active && m.entity === 'us').map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="India Team">
+                      {members.filter(m => m.active && m.entity === 'india').map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </FieldRow>
               </section>
               <section>
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase mb-3">Module Access</h3>
@@ -622,51 +627,6 @@ export default function TeamDirectoryPage() {
         </Modal>
       )}
     </div>
-  )
-}
-
-function HierarchyTree({
-  nodes,
-  onSelect,
-  roleBadgeClass,
-  membersById,
-  depth = 0,
-}: {
-  nodes: HierarchyNode[]
-  onSelect: (m: Member) => void
-  roleBadgeClass: (r: string) => string
-  membersById: Map<string, Member>
-  depth?: number
-}) {
-  return (
-    <ul className={cn(depth > 0 && 'ml-8 border-l-2 border-zinc-200 pl-4')}>
-      {nodes.map((node, i) => {
-        const fullMember = membersById.get(node.id)
-        return (
-          <li key={node.id} className={cn('py-2', depth > 0 && 'relative')}>
-            {depth > 0 && (
-              <span className="absolute left-0 top-5 w-4 h-px bg-zinc-200" style={{ marginLeft: '-1rem' }} />
-            )}
-            <button
-              type="button"
-              onClick={() => onSelect(fullMember ?? { ...node, email: null, reports_to_name: null, client_count: 0 })}
-              className="text-left w-full rounded-lg p-2 hover:bg-violet-50 flex items-center gap-3 group"
-            >
-              <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-zinc-900 truncate">{node.name}</span>
-                <span className="text-sm text-zinc-500 truncate">{node.role_title || '—'}</span>
-              </div>
-              <span className={cn('inline-flex px-2 py-0.5 rounded text-xs font-medium shrink-0', roleBadgeClass(node.role))}>
-                {node.role}
-              </span>
-            </button>
-            {node.children.length > 0 && (
-              <HierarchyTree nodes={node.children} onSelect={onSelect} roleBadgeClass={roleBadgeClass} membersById={membersById} depth={depth + 1} />
-            )}
-          </li>
-        )
-      })}
-    </ul>
   )
 }
 

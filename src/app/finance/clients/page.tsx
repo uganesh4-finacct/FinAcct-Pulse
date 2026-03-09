@@ -55,6 +55,7 @@ export default function FinanceClientsPage() {
   const [loading, setLoading] = useState(true)
   const [verticalFilter, setVerticalFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [searchName, setSearchName] = useState('')
   const [editClient, setEditClient] = useState<ClientRow | null>(null)
   const [showQuickSetup, setShowQuickSetup] = useState(false)
   const [showAddClient, setShowAddClient] = useState(false)
@@ -77,6 +78,10 @@ export default function FinanceClientsPage() {
     if (verticalFilter && c.vertical !== verticalFilter) return false
     if (statusFilter === 'configured' && c.billing_status !== 'configured') return false
     if (statusFilter === 'not_configured' && c.billing_status !== 'not_configured') return false
+    if (searchName.trim()) {
+      const q = searchName.trim().toLowerCase()
+      if (!(c.name ?? '').toLowerCase().includes(q)) return false
+    }
     return true
   })
 
@@ -190,6 +195,13 @@ export default function FinanceClientsPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
+        <input
+          type="text"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+          placeholder="Search by client name..."
+          className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white min-w-[200px]"
+        />
         <select
           value={verticalFilter}
           onChange={(e) => setVerticalFilter(e.target.value)}

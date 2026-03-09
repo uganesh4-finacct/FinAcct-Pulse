@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 const STAGES = ['Discovery', 'Proposal', 'Negotiation', 'Won', 'Lost'] as const;
 type Stage = (typeof STAGES)[number];
+const STAGE_PROBABILITY: Record<Stage, number> = { Discovery: 50, Proposal: 50, Negotiation: 75, Won: 100, Lost: 0 };
 
 type Deal = {
   id: string;
@@ -40,11 +41,17 @@ export default function SalesPipelinePage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Deal | null>(null);
+  const [filterStage, setFilterStage] = useState('');
+  const [filterOwner, setFilterOwner] = useState('');
+  const [searchCompany, setSearchCompany] = useState('');
 
   const fetchData = async () => {
     try {
+      const params = new URLSearchParams();
+      if (filterStage) params.set('stage', filterStage);
+      if (filterOwner) params.set('owner_id', filterOwner);
       const [dealsRes, teamRes, leadsRes] = await Promise.all([
-        fetch('/api/sales/deals'),
+        fetch(`/api/sales/deals?${params}`),
         fetch('/api/team'),
         fetch('/api/sales/lead-options'),
       ]);
@@ -71,7 +78,7 @@ export default function SalesPipelinePage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [filterStage, filterOwner]);
 
   const ownerMap = useMemo(() => {
     const m: Record<string, string> = {};
@@ -79,16 +86,22 @@ export default function SalesPipelinePage() {
     return m;
   }, [teamMembers]);
 
+  const filteredDeals = useMemo(() => {
+    if (!searchCompany.trim()) return deals;
+    const q = searchCompany.trim().toLowerCase();
+    return deals.filter((d) => (d.company_name ?? '').toLowerCase().includes(q));
+  }, [deals, searchCompany]);
+
   const dealsByStage = useMemo(() => {
     const m: Record<string, Deal[]> = {};
     STAGES.forEach((s) => { m[s] = []; });
-    deals.forEach((d) => {
+    filteredDeals.forEach((d) => {
       const s = STAGES.includes(d.stage as Stage) ? d.stage : 'Discovery';
       if (!m[s]) m[s] = [];
       m[s].push(d);
     });
     return m;
-  }, [deals]);
+  }, [filteredDeals]);
 
   const openNew = () => {
     setEditing(null);
@@ -128,6 +141,37 @@ export default function SalesPipelinePage() {
         </Button>
       </div>
       <SubNav />
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input
+          type="text"
+          value={searchCompany}
+          onChange={(e) => setSearchCompany(e.target.value)}
+          placeholder="Search by company..."
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[180px] bg-white dark:bg-zinc-900"
+        />
+        <select
+          value={filterStage}
+          onChange={(e) => setFilterStage(e.target.value)}
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
+        >
+          <option value="">All stages</option>
+          {STAGES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={filterOwner}
+          onChange={(e) => setFilterOwner(e.target.value)}
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
+        >
+          <option value="">All owners</option>
+          {teamMembers.map((m) => (
+            <option key={m.id} value={m.id}>{m.name}</option>
+          ))}
+        </select>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -225,6 +269,7 @@ export default function SalesPipelinePage() {
           leadOptions={leadOptions}
           onClose={closeModal}
           onSuccess={() => { closeModal(); fetchData(); }}
+          onDelete={editing ? () => { closeModal(); fetchData(); } : undefined}
         />
       )}
     </div>
@@ -306,12 +351,14 @@ function DealModal({
   leadOptions,
   onClose,
   onSuccess,
+  onDelete,
 }: {
   deal: Deal | null;
   teamMembers: TeamMember[];
   leadOptions: LeadOption[];
   onClose: () => void;
   onSuccess: () => void;
+  onDelete?: () => void;
 }) {
   const [name, setName] = useState(deal?.name ?? '');
   const [companyName, setCompanyName] = useState(deal?.company_name ?? '');
@@ -326,6 +373,7 @@ function DealModal({
   const [ownerId, setOwnerId] = useState(deal?.owner_id ?? '');
   const [notes, setNotes] = useState(deal?.notes ?? '');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -380,6 +428,18 @@ function DealModal({
     }
   };
 
+  const handleDelete = async () => {
+    if (!deal?.id || !confirm('Delete this deal? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/sales/deals/${deal.id}`, { method: 'DELETE' });
+      if (res.ok) onDelete?.();
+      else setError('Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <Modal onClose={onClose} maxWidth="lg">
       <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
@@ -416,7 +476,14 @@ function DealModal({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Stage">
-                <Select value={stage} onChange={(e) => setStage(e.target.value as Stage)}>
+                <Select
+                  value={stage}
+                  onChange={(e) => {
+                    const s = e.target.value as Stage;
+                    setStage(s);
+                    setProbability(String(STAGE_PROBABILITY[s] ?? 50));
+                  }}
+                >
                   {STAGES.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -448,6 +515,11 @@ function DealModal({
           </div>
         </ModalBody>
         <ModalFooter>
+          {deal && onDelete && (
+            <Button type="button" variant="ghost" className="text-red-600 mr-auto" onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          )}
           <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={saving}>{saving ? 'Saving...' : deal ? 'Save' : 'Create'}</Button>
         </ModalFooter>

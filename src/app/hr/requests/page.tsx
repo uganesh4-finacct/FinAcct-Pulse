@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import SidePanel from '@/components/SidePanel'
 import { FieldRow, FieldSelect, FieldTextarea } from '@/components/FieldRow'
+import { StaffingRequestModal, type StaffingRequestPayload } from '@/components/hr/StaffingRequestModal'
 import { HR_REQUEST_STATUS_LABELS, HR_MARKET_BADGE } from '@/lib/hr/types'
 import type { HRStaffingRequest, HRRequestType, HRMarket, HRServiceType, HRUrgency } from '@/lib/hr/types'
 
@@ -61,6 +62,7 @@ function HRRequestsContent() {
   const [form, setForm] = useState({
     request_type: 'New Client' as HRRequestType,
     client_id: '',
+    client_name_new: '',
     role_type_id: '',
     role_title: '',
     positions_needed: 1,
@@ -126,13 +128,54 @@ function HRRequestsContent() {
   })
 
   const handleCreate = async () => {
-    if (!form.client_id || !form.role_title.trim()) return
+    const isNewClient = form.request_type === 'New Client'
+    if (isNewClient) {
+      if (!form.client_name_new?.trim()) {
+        alert('Please enter the new client name.')
+        return
+      }
+      if (!form.role_title?.trim()) {
+        alert('Please enter role title.')
+        return
+      }
+    } else {
+      if (!form.client_id || !form.role_title?.trim()) {
+        alert('Please select client and enter role title.')
+        return
+      }
+    }
     setSaving(true)
+    let clientId = form.client_id
+    if (isNewClient && form.client_name_new?.trim()) {
+      try {
+        const createRes = await fetch('/api/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.client_name_new.trim(),
+            vertical: 'other',
+            active: true,
+          }),
+        })
+        const createData = await createRes.json()
+        if (!createRes.ok) {
+          alert(createData?.error || 'Failed to create client')
+          setSaving(false)
+          return
+        }
+        clientId = createData.id
+      } catch {
+        alert('Failed to create client')
+        setSaving(false)
+        return
+      }
+    }
     const res = await fetch('/api/hr/requests', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
+        client_id: clientId,
         estimated_monthly_fee: form.estimated_monthly_fee ? parseFloat(form.estimated_monthly_fee) : null,
         estimated_start_date: form.estimated_start_date || null,
       }),
@@ -144,7 +187,61 @@ function HRRequestsContent() {
       return
     }
     setNewOpen(false)
-    setForm({ ...form, client_id: '', role_title: '', justification: '' })
+    setForm({ ...form, client_id: '', client_name_new: '', role_title: '', justification: '' })
+    fetchRequests()
+  }
+
+  const handleWizardSubmit = async (payload: StaffingRequestPayload) => {
+    setSaving(true)
+    let clientId = payload.client_id
+    if (payload.request_type === 'New Client' && payload.new_client_name?.trim()) {
+      try {
+        const createRes = await fetch('/api/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: payload.new_client_name.trim(),
+            vertical: 'other',
+            active: true,
+          }),
+        })
+        const createData = await createRes.json()
+        if (!createRes.ok) {
+          alert(createData?.error || 'Failed to create client')
+          setSaving(false)
+          return
+        }
+        clientId = createData.id
+      } catch {
+        alert('Failed to create client')
+        setSaving(false)
+        return
+      }
+    }
+    const res = await fetch('/api/hr/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        request_type: payload.request_type,
+        client_id: clientId,
+        role_type_id: null,
+        role_title: payload.role_title,
+        positions_needed: payload.positions_needed,
+        market: payload.market,
+        service_type: payload.service_type ?? 'Accounting',
+        estimated_monthly_fee: payload.estimated_monthly_fee ?? null,
+        estimated_start_date: payload.estimated_start_date || null,
+        urgency: payload.urgency,
+        justification: payload.justification || null,
+      }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (!res.ok) {
+      alert(data.error || 'Failed to create request')
+      return
+    }
+    setNewOpen(false)
     fetchRequests()
   }
 
@@ -182,7 +279,7 @@ function HRRequestsContent() {
 
   const clientOptions = clients.map(c => ({ value: c.id, label: c.name }))
   const statusOptions = Object.entries(HR_REQUEST_STATUS_LABELS).map(([value, label]) => ({ value, label }))
-  const showApprovalSection = selectedDetail && (selectedDetail.status === 'Pending' || selectedDetail.status === 'pending_approval') && currentUser?.role === 'admin'
+  const showApprovalSection = selectedDetail && (selectedDetail.status === 'Pending' || selectedDetail.status === 'pending_approval') && (currentUser?.role === 'admin' || currentUser?.role === 'hr_manager')
 
   return (
     <div style={{ padding: '24px 28px', background: '#fafafa', minHeight: '100vh' }}>
@@ -291,13 +388,31 @@ function HRRequestsContent() {
         </table>
       </div>
 
-      <SidePanel open={newOpen} onClose={() => setNewOpen(false)} title="New Staffing Request" subtitle="Fill required fields">
+      <StaffingRequestModal
+        isOpen={newOpen}
+        onClose={() => setNewOpen(false)}
+        onSubmit={handleWizardSubmit}
+        clients={clients}
+      />
+
+      <SidePanel open={newOpen} onClose={() => setNewOpen(false)} title="New Staffing Request (Quick)" subtitle="Fill required fields">
         <FieldRow label="Request Type" required>
           <FieldSelect value={form.request_type} onChange={v => setForm({ ...form, request_type: v as HRRequestType })} options={REQUEST_TYPES} />
         </FieldRow>
-        <FieldRow label="Client" required>
-          <FieldSelect value={form.client_id} onChange={v => setForm({ ...form, client_id: v })} options={[{ value: '', label: 'Select client' }, ...clientOptions]} />
-        </FieldRow>
+        {form.request_type === 'New Client' ? (
+          <FieldRow label="New Client Name" required>
+            <input
+              value={form.client_name_new}
+              onChange={e => setForm({ ...form, client_name_new: e.target.value })}
+              placeholder="Enter new client name"
+              style={{ width: '100%', padding: '8px 11px', border: '1px solid #e4e4e7', borderRadius: 7, fontSize: 13 }}
+            />
+          </FieldRow>
+        ) : (
+          <FieldRow label="Client" required>
+            <FieldSelect value={form.client_id} onChange={v => setForm({ ...form, client_id: v })} options={[{ value: '', label: 'Select client' }, ...clientOptions]} />
+          </FieldRow>
+        )}
         <FieldRow label="Role Type">
           <FieldSelect value={form.role_type_id} onChange={v => setForm({ ...form, role_type_id: v })} options={[{ value: '', label: 'Select' }, ...roleTypes.map(rt => ({ value: rt.id, label: rt.name }))]} />
         </FieldRow>

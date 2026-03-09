@@ -35,11 +35,14 @@ export default async function MarketingPage() {
           <Link href="/marketing/campaigns" className="px-3 py-2 border border-slate-200 text-slate-600 text-sm rounded hover:bg-slate-50 transition">
             Campaigns
           </Link>
+          <Link href="/marketing/leads" className="px-3 py-2 border border-slate-200 text-slate-600 text-sm rounded hover:bg-slate-50 transition">
+            Leads
+          </Link>
           <Link href="/marketing/referrals" className="px-3 py-2 border border-slate-200 text-slate-600 text-sm rounded hover:bg-slate-50 transition">
             Referrals
           </Link>
-          <Link href="/marketing/new" className="px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded hover:bg-slate-700 transition">
-            + New Lead
+          <Link href="/marketing/leads" className="px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded hover:bg-slate-700 transition">
+            + Add Lead
           </Link>
         </div>
       </div>

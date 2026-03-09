@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import type { HRPipelineByRequisition } from '@/lib/hr/types'
 
 interface PipelineFunnelProps {
@@ -39,7 +40,15 @@ export default function PipelineFunnel({ rows, maxBar = 10 }: PipelineFunnelProp
             const max = Math.max(row.sourced, row.screening, row.technical, row.offer, row.hired, 1)
             return (
               <tr key={row.requisition_id ?? i} style={{ borderBottom: '1px solid #f4f4f5' }}>
-                <td style={{ padding: '10px 12px', fontWeight: 500, color: '#09090b' }}>{row.position_title}</td>
+                <td style={{ padding: '10px 12px', fontWeight: 500, color: '#09090b' }}>
+                  {row.requisition_id ? (
+                    <Link href={`/hr/requisitions/${row.requisition_id}`} style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline hover:text-violet-600">
+                      {row.position_title}
+                    </Link>
+                  ) : (
+                    row.position_title
+                  )}
+                </td>
                 <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <div

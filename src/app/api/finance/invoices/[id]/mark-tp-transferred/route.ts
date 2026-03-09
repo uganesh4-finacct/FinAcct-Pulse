@@ -15,16 +15,14 @@ export async function POST(req: Request, { params }: Params) {
   const transfer_date = body.transfer_date || new Date().toISOString().split('T')[0]
   const notes = body.notes || body.reference || null
   const supabase = createServiceSupabase()
-  const { data: inv } = await supabase.from('client_invoices').select('india_tp_amount, invoiced_amount, notes').eq('id', id).single()
+  const { data: inv } = await supabase.from('client_invoices').select('invoiced_amount, notes').eq('id', id).single()
   if (!inv) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
-  const invWithNotes = inv as { india_tp_amount: unknown; invoiced_amount: unknown; notes?: string | null }
-  const tpAmount = invWithNotes.india_tp_amount ?? Math.round(Number(invWithNotes.invoiced_amount || 0) * 0.9 * 100) / 100
+  const invWithNotes = inv as { invoiced_amount?: unknown; notes?: string | null }
   const { data, error } = await supabase
     .from('client_invoices')
     .update({
       india_tp_status: 'transferred',
       india_tp_date: transfer_date,
-      india_tp_amount: tpAmount,
       notes: notes ? `${invWithNotes.notes || ''}\nTP: ${notes}`.trim() : invWithNotes.notes ?? null,
       updated_at: new Date().toISOString(),
     })

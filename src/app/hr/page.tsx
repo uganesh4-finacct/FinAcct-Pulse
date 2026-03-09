@@ -9,7 +9,7 @@ import {
   fetchHRPipelineByRequisition,
   fetchHRAlerts,
 } from '@/lib/hr/queries'
-import PipelineFunnel from '@/components/hr/PipelineFunnel'
+import PipelineTableInteractive from '@/components/hr/PipelineTableInteractive'
 
 export default async function HRDashboardPage() {
   const user = await getUserRole()
@@ -124,7 +124,7 @@ export default async function HRDashboardPage() {
         >
           Pipeline by Requisition
         </div>
-        <PipelineFunnel rows={pipeline} />
+        <PipelineTableInteractive rows={pipeline} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
@@ -179,7 +179,7 @@ export default async function HRDashboardPage() {
               + New Request
             </Link>
             <Link
-              href="/hr/candidates?add=1"
+              href="/hr/candidates/new"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

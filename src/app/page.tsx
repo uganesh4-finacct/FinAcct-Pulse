@@ -315,10 +315,10 @@ export default function ExecutiveDashboardPage() {
                     </span>
                   </div>
                   <Link
-                    href="/it-assets"
+                    href="/it"
                     className="inline-flex items-center gap-1 text-xs font-medium text-violet-600 dark:text-violet-400 mt-2"
                   >
-                    View IT assets
+                    View IT dashboard
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </CardContent>

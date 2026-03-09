@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
 
   const router = useRouter();
 
@@ -121,11 +122,17 @@ export default function LoginPage() {
             <div className="flex justify-end">
               <button
                 type="button"
+                onClick={() => setForgotPasswordMessage('Contact your administrator to reset your password.')}
                 className="text-sm text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
               >
                 Forgot password?
               </button>
             </div>
+            {forgotPasswordMessage && (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 -mt-2">
+                {forgotPasswordMessage}
+              </p>
+            )}
 
             {/* Submit with hover scale */}
             <button

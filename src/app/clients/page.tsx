@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import SidePanel from '@/components/SidePanel'
 import SubNav from '@/components/SubNav'
 import ErrorBanner from '@/components/ErrorBanner'
+import { SortableTable } from '@/components/ui/SortableTable'
 import { FieldRow, FieldInput, FieldSelect, FieldTextarea, SaveButton } from '@/components/FieldRow'
 
 // After Auth: const SHOW_FINANCIAL_DATA = role === 'admin' || role === 'reviewer'
@@ -65,6 +66,9 @@ export default function ClientsPage() {
   const [owners, setOwners] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filterVertical, setFilterVertical] = useState<string | null>(null)
+  const [filterSearch, setFilterSearch] = useState('')
+  const [filterOwnerId, setFilterOwnerId] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all')
   const [selected, setSelected] = useState<any | null>(null)
   const [createMode, setCreateMode] = useState(false)
   const [form, setForm] = useState<any>(emptyCreateForm())
@@ -94,7 +98,6 @@ export default function ClientsPage() {
   }
 
   const openPanel = (c: any) => {
-    console.log('Opening panel for client:', c, 'id:', c?.id)
     setCreateMode(false)
     setSelected(c)
     setErrors({})
@@ -233,9 +236,19 @@ export default function ClientsPage() {
     setTimeout(() => { closePanel() }, 800)
   }
 
-  const filtered = filterVertical
+  const filtered = (filterVertical
     ? clients.filter(c => c.vertical === filterVertical)
     : clients
+  ).filter((c: any) => {
+    if (filterSearch.trim()) {
+      const search = filterSearch.trim().toLowerCase()
+      if (!(c.name ?? '').toLowerCase().includes(search)) return false
+    }
+    if (filterOwnerId && c.assigned_owner_id !== filterOwnerId) return false
+    if (filterStatus === 'active' && !c.active) return false
+    if (filterStatus === 'inactive' && c.active) return false
+    return true
+  })
 
   const totals = Object.keys(VERTICAL_CONFIG).reduce((acc, v) => {
     const vClients = clients.filter(c => c.vertical === v)
@@ -310,85 +323,74 @@ export default function ClientsPage() {
         })}
       </div>
 
-      {/* Table */}
-      <div style={{ background: 'white', border: '1px solid #e4e4e7', borderRadius: '12px', overflow: 'hidden' }}>
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid #f4f4f5', fontSize: '13px', fontWeight: 600, color: '#09090b', display: 'flex', justifyContent: 'space-between' }}>
-          <span>{filterVertical ? `${VERTICAL_CONFIG[filterVertical]?.label} Clients` : 'All Clients'} ({filtered.length})</span>
-          <span style={{ fontSize: '11.5px', color: '#a1a1aa', fontWeight: 400 }}>Click any row to edit</span>
-        </div>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Client</th>
-              <th>Vertical</th>
-              <th>Client Type</th>
-              <th>Owner</th>
-              {SHOW_FINANCIAL_DATA && <th>Monthly Fee</th>}
-              {SHOW_FINANCIAL_DATA && <th>India TP (90%)</th>}
-              {SHOW_FINANCIAL_DATA && <th>Payment</th>}
-              <th>Close Day</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={SHOW_FINANCIAL_DATA ? 9 : 6} style={{ textAlign: 'center', padding: '32px', color: '#a1a1aa' }}>
-                  <div>No clients found. Add your first client.</div>
-                  <button onClick={openCreate} style={{ marginTop: '12px', padding: '8px 16px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ Add Client</button>
-                </td>
-              </tr>
-            )}
-            {filtered.map(c => {
-              const cfg = VERTICAL_CONFIG[c.vertical]
-              return (
-                <tr
-                  key={c.id}
-                  onClick={() => openPanel(c)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{
-                        width: '28px', height: '28px', borderRadius: '7px',
-                        background: cfg?.bg ?? '#f4f4f5',
-                        color: cfg?.color ?? '#71717a',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '11px', fontWeight: 700, flexShrink: 0,
-                      }}>
-                        {c.name?.charAt(0)}
-                      </div>
-                      <span style={{ fontWeight: 600, color: '#09090b' }}>{c.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{
-                      display: 'inline-flex', padding: '2px 8px', borderRadius: '5px',
-                      fontSize: '11px', fontWeight: 600,
-                      background: cfg?.bg ?? '#f4f4f5',
-                      color: cfg?.color ?? '#71717a',
-                      border: `1px solid ${cfg?.border ?? '#e4e4e7'}`,
-                    }}>
-                      {cfg?.label ?? c.vertical}
-                    </span>
-                  </td>
-                  <td>
-                    {c.client_type === 'cpa_partner' && <span className="badge badge-blue">CPA Partner</span>}
-                    {c.client_type === 'back_office' && <span className="badge badge-violet">Back Office</span>}
-                    {(c.client_type === 'direct' || !c.client_type) && <span className="badge badge-gray">Direct</span>}
-                  </td>
-                  <td style={{ color: '#71717a' }}>{c.team_members?.name ?? '—'}</td>
-                  {SHOW_FINANCIAL_DATA && <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>${c.monthly_fee?.toLocaleString()}</td>}
-                  {SHOW_FINANCIAL_DATA && <td style={{ fontFamily: 'monospace', color: '#71717a' }}>${c.india_tp_transfer?.toLocaleString()}</td>}
-                  {SHOW_FINANCIAL_DATA && <td><span className="badge badge-gray">{c.payment_method?.toUpperCase() ?? '—'}</span></td>}
-                  <td style={{ color: '#71717a' }}>{c.deadline_day ? `Day ${c.deadline_day}` : '—'}</td>
-                  <td><span className={`badge ${c.active ? 'badge-green' : 'badge-gray'}`}>{c.active ? 'Active' : 'Inactive'}</span></td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      {/* Search and filters */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <input
+          type="text"
+          value={filterSearch}
+          onChange={e => setFilterSearch(e.target.value)}
+          placeholder="Search by client name..."
+          style={{ padding: '8px 12px', border: '1px solid #e4e4e7', borderRadius: '8px', fontSize: '13px', minWidth: '200px' }}
+        />
+        <select
+          value={filterOwnerId ?? ''}
+          onChange={e => setFilterOwnerId(e.target.value || null)}
+          style={{ padding: '8px 12px', border: '1px solid #e4e4e7', borderRadius: '8px', fontSize: '13px', minWidth: '160px', background: 'white' }}
+        >
+          <option value="">All owners</option>
+          {owners.map((o: any) => (
+            <option key={o.id} value={o.id}>{o.name}</option>
+          ))}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={e => setFilterStatus(e.target.value as 'all' | 'active' | 'inactive')}
+          style={{ padding: '8px 12px', border: '1px solid #e4e4e7', borderRadius: '8px', fontSize: '13px', minWidth: '120px', background: 'white' }}
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        {(filterSearch || filterOwnerId || filterStatus !== 'all') && (
+          <button
+            type="button"
+            onClick={() => { setFilterSearch(''); setFilterOwnerId(null); setFilterStatus('all'); }}
+            style={{ fontSize: '12px', padding: '6px 12px', border: '1px solid #e4e4e7', borderRadius: '7px', background: 'white', cursor: 'pointer', color: '#71717a' }}
+          >
+            Clear filters
+          </button>
+        )}
       </div>
+
+      {/* Table */}
+      <div style={{ marginBottom: 8, fontSize: '11.5px', color: '#a1a1aa', fontWeight: 400 }}>Click any row to edit</div>
+      <SortableTable
+        tableId="clients"
+        data={filtered.map((c: any) => ({ ...c, owner_name: c.team_members?.name ?? '' }))}
+        columns={[
+          { key: 'name', header: 'Client', sortable: true, groupable: true, render: (c: any) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: VERTICAL_CONFIG[c.vertical]?.bg ?? '#f4f4f5', color: VERTICAL_CONFIG[c.vertical]?.color ?? '#71717a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{c.name?.charAt(0)}</div>
+              <span style={{ fontWeight: 600, color: '#09090b' }}>{c.name}</span>
+            </div>
+          )},
+          { key: 'vertical', header: 'Vertical', sortable: true, groupable: true, render: (c: any) => {
+            const cfg = VERTICAL_CONFIG[c.vertical]
+            return <span style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: cfg?.bg ?? '#f4f4f5', color: cfg?.color ?? '#71717a' }}>{cfg?.label ?? c.vertical}</span>
+          }},
+          { key: 'client_type', header: 'Client Type', sortable: true, groupable: true, render: (c: any) => c.client_type === 'cpa_partner' ? <span className="badge badge-blue">CPA Partner</span> : c.client_type === 'back_office' ? <span className="badge badge-violet">Back Office</span> : <span className="badge badge-gray">Direct</span> },
+          { key: 'owner_name', header: 'Owner', sortable: true, groupable: true, render: (c: any) => c.owner_name || '—' },
+          ...(SHOW_FINANCIAL_DATA ? [{ key: 'monthly_fee', header: 'Monthly Fee', sortable: true, render: (c: any) => <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>${Number(c.monthly_fee)?.toLocaleString()}</span> }] : []),
+          ...(SHOW_FINANCIAL_DATA ? [{ key: 'india_tp_transfer', header: 'India TP (90%)', sortable: true, render: (c: any) => <span style={{ fontFamily: 'monospace', color: '#71717a' }}>${Number(c.india_tp_transfer)?.toLocaleString()}</span> }] : []),
+          ...(SHOW_FINANCIAL_DATA ? [{ key: 'payment_method', header: 'Payment', sortable: true, render: (c: any) => <span className="badge badge-gray">{String(c.payment_method || '').toUpperCase() || '—'}</span> }] : []),
+          { key: 'deadline_day', header: 'Close Day', sortable: true, render: (c: any) => c.deadline_day ? `Day ${c.deadline_day}` : '—' },
+          { key: 'active', header: 'Status', sortable: true, groupable: true, render: (c: any) => <span className={`badge ${c.active ? 'badge-green' : 'badge-gray'}`}>{c.active ? 'Active' : 'Inactive'}</span> },
+        ].flat()}
+        defaultSort={{ key: 'name', direction: 'asc' }}
+        onRowClick={openPanel}
+        emptyMessage="No clients found. Add your first client."
+        getRowId={(c: any) => c.id}
+      />
 
       {/* Side Panel */}
       <SidePanel

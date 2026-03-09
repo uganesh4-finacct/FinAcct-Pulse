@@ -72,7 +72,6 @@ export async function POST(req: Request) {
   }
   const monthFirst = invoice_month ? `${String(invoice_month).slice(0, 7)}-01` : new Date().toISOString().slice(0, 10)
   const amt = parseFloat(invoiced_amount)
-  const tpAmount = Math.round(amt * 0.9 * 100) / 100
   const supabase = createServiceSupabase()
   const payload = {
     client_id,
@@ -90,7 +89,6 @@ export async function POST(req: Request) {
     payment_reference: payment_reference || null,
     india_tp_status: india_tp_status || 'pending',
     india_tp_date: india_tp_date || null,
-    india_tp_amount: tpAmount,
     notes: notes || null,
   }
   const { data, error } = await supabase.from('client_invoices').insert(payload).select().single()

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import SubNav from '@/components/SubNav';
@@ -134,7 +135,11 @@ function daysInPipeline(createdAt: string | undefined, appliedDate?: string | nu
 }
 
 export default function HiringTrackerPage() {
-  const [activeTab, setActiveTab] = useState<'positions' | 'pipeline' | 'candidates'>('positions');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams?.get('tab') as 'positions' | 'pipeline' | 'candidates' | null;
+  const [activeTab, setActiveTab] = useState<'positions' | 'pipeline' | 'candidates'>(
+    tabParam === 'candidates' || tabParam === 'pipeline' || tabParam === 'positions' ? tabParam : 'positions'
+  );
   const [stats, setStats] = useState<Stats>({ openPositions: 0, activeCandidates: 0, inPipeline: 0, offersPending: 0 });
   const [positions, setPositions] = useState<PositionRow[]>([]);
   const [candidates, setCandidates] = useState<CandidateRow[]>([]);
@@ -187,6 +192,11 @@ export default function HiringTrackerPage() {
 
   const pipelineStages = useMemo(() => stages.filter((s) => !s.is_terminal).sort((a, b) => a.sort_order - b.sort_order), [stages]);
   const openPositionsForDropdown = useMemo(() => positions.filter((p) => p.status === 'open'), [positions]);
+
+  useEffect(() => {
+    const t = searchParams?.get('tab');
+    if (t === 'candidates' || t === 'pipeline' || t === 'positions') setActiveTab(t);
+  }, [searchParams]);
 
   const fetchStats = async () => {
     try {

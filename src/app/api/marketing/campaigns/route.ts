@@ -2,16 +2,19 @@ import { NextResponse } from 'next/server'
 import { getCurrentUserWithPermissions, canAccessMarketing } from '@/lib/auth-server'
 import { createServiceSupabase } from '@/lib/supabase-server'
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await getCurrentUserWithPermissions()
   if (!canAccessMarketing(user)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+  const { searchParams } = new URL(req.url)
+  const status = searchParams.get('status')
+  const type = searchParams.get('type')
   const supabase = createServiceSupabase()
-  const { data: campaigns, error } = await supabase
-    .from('campaigns')
-    .select('*')
-    .order('start_date', { ascending: false })
+  let q = supabase.from('campaigns').select('*').order('start_date', { ascending: false })
+  if (status && status.trim()) q = q.eq('status', status.trim())
+  if (type && type.trim()) q = q.eq('platform', type.trim())
+  const { data: campaigns, error } = await q
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

@@ -41,11 +41,13 @@ export default function SalesProposalsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ProposalRow | null>(null);
+  const [filterStatus, setFilterStatus] = useState('');
 
   const fetchData = async () => {
     try {
+      const propUrl = filterStatus ? `/api/sales/proposals?status=${encodeURIComponent(filterStatus)}` : '/api/sales/proposals';
       const [propRes, dealsRes] = await Promise.all([
-        fetch('/api/sales/proposals'),
+        fetch(propUrl),
         fetch('/api/sales/deals'),
       ]);
       if (propRes.ok) {
@@ -67,7 +69,7 @@ export default function SalesProposalsPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [filterStatus]);
 
   const openNew = () => {
     setEditing(null);
@@ -100,6 +102,19 @@ export default function SalesProposalsPage() {
         </Button>
       </div>
       <SubNav />
+
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
+        >
+          <option value="">All statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -200,8 +215,20 @@ export default function SalesProposalsPage() {
                       <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{p.sent_date ?? '—'}</td>
                       <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{p.valid_until ?? '—'}</td>
                       <td className="py-3 px-4">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(p); }} className="text-violet-600 dark:text-violet-400 hover:underline">
+                        <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(p); }} className="text-violet-600 dark:text-violet-400 hover:underline mr-2">
                           Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm('Delete this proposal?')) return;
+                            const res = await fetch(`/api/sales/proposals/${p.id}`, { method: 'DELETE' });
+                            if (res.ok) fetchData();
+                          }}
+                          className="text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          Delete
                         </button>
                       </td>
                     </tr>

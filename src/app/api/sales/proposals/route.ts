@@ -2,16 +2,17 @@ import { NextResponse } from 'next/server'
 import { getCurrentUserWithPermissions, canAccessSales } from '@/lib/auth-server'
 import { createServiceSupabase } from '@/lib/supabase-server'
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await getCurrentUserWithPermissions()
   if (!canAccessSales(user)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+  const { searchParams } = new URL(req.url)
+  const status = searchParams.get('status')
   const supabase = createServiceSupabase()
-  const { data: proposals, error } = await supabase
-    .from('sales_proposals')
-    .select('*, deals(id, name, company_name)')
-    .order('created_at', { ascending: false })
+  let q = supabase.from('sales_proposals').select('*, deals(id, name, company_name)').order('created_at', { ascending: false })
+  if (status && status.trim()) q = q.eq('status', status.trim())
+  const { data: proposals, error } = await q
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

@@ -108,6 +108,40 @@ export default function LeadsPage() {
     setModalOpen(true);
   };
 
+  const convertToDeal = async (lead: LeadRow) => {
+    try {
+      const res = await fetch('/api/sales/deals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: lead.company_name || lead.contact_name || 'Deal',
+          company_name: lead.company_name || 'Unknown',
+          contact_name: lead.contact_name || null,
+          contact_email: lead.contact_email || null,
+          contact_phone: lead.contact_phone || null,
+          lead_id: lead.id,
+          stage: 'Discovery',
+          probability: 50,
+          notes: lead.notes ? `Converted from marketing lead (source: ${lead.source || '—'}). ${lead.notes}` : `Converted from marketing lead. Source: ${lead.source || '—'}`,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        alert(d.error || 'Failed to create deal');
+        return;
+      }
+      await fetch(`/api/marketing/leads/${lead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Won' }),
+      });
+      fetchData();
+      alert('Deal created. Update the deal in Sales Pipeline.');
+    } catch {
+      alert('Failed to convert');
+    }
+  };
+
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
@@ -288,8 +322,25 @@ export default function LeadsPage() {
                         <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{lead.lead_owner_id ? (ownerMap[lead.lead_owner_id] ?? '—') : '—'}</td>
                         <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{dateAdded}</td>
                         <td className="py-3 px-4">
-                          <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(lead); }} className="text-violet-600 dark:text-violet-400 hover:underline">
+                          <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(lead); }} className="text-violet-600 dark:text-violet-400 hover:underline mr-2">
                             Edit
+                          </button>
+                          {['Qualified', 'Proposal_Sent', 'Negotiating'].includes(lead.status) && (
+                            <button type="button" onClick={(e) => { e.stopPropagation(); convertToDeal(lead); }} className="text-emerald-600 dark:text-emerald-400 hover:underline mr-2">
+                              Convert to Deal
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (!confirm('Delete this lead?')) return;
+                              const res = await fetch(`/api/marketing/leads/${lead.id}`, { method: 'DELETE' });
+                              if (res.ok) fetchData();
+                            }}
+                            className="text-red-600 dark:text-red-400 hover:underline"
+                          >
+                            Delete
                           </button>
                         </td>
                       </tr>
@@ -348,6 +399,10 @@ function LeadModal({
       setError('Company name is required');
       return;
     }
+    if (!email.trim()) {
+      setError('Contact email is required');
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -398,7 +453,7 @@ function LeadModal({
         <ModalBody>
           <div className="space-y-4">
             {error && <div className={errorBlockClass}>{error}</div>}
-            <FormField label="Lead Name">
+            <FormField label="Contact Name" required>
               <Input type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Contact person name" />
             </FormField>
             <div className="grid grid-cols-2 gap-4">
@@ -418,8 +473,8 @@ function LeadModal({
               </Select>
             </FormField>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Contact Email">
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <FormField label="Contact Email" required>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </FormField>
               <FormField label="Phone">
                 <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />

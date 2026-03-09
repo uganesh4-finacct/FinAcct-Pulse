@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { formatCurrency } from '@/lib/finance-utils'
 import { Button } from '@/components/ui/Button'
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal'
+import { MonthPicker, currentMonth } from '@/components/MonthPicker'
 import { Receipt, CreditCard, ArrowRightLeft, AlertTriangle, FileCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -42,6 +44,8 @@ type DashboardData = {
 export default function FinanceDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generateMonth, setGenerateMonth] = useState(currentMonth())
+  const [generating, setGenerating] = useState(false)
   const [confirmMonthOpen, setConfirmMonthOpen] = useState(false)
   const [confirmNotes, setConfirmNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -54,13 +58,27 @@ export default function FinanceDashboardPage() {
   }, [])
 
   const handleGenerateInvoices = async () => {
-    const r = await fetch('/api/finance/invoices/generate', { method: 'POST' })
-    if (r.ok) {
+    setGenerating(true)
+    try {
+      const r = await fetch('/api/finance/invoices/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month: `${generateMonth}-01` }),
+      })
+      const resData = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        alert(resData.error || 'Failed to generate invoices')
+        return
+      }
+      if (resData.created === 0) {
+        alert(resData.message || 'No new invoices to generate')
+        return
+      }
+      alert(`Generated ${resData.created} invoices for ${generateMonth}`)
       const d = await fetch('/api/finance/dashboard').then(r => r.json())
       setData(d)
-    } else {
-      const err = await r.json().catch(() => ({}))
-      alert(err.error || 'Failed to generate invoices')
+    } finally {
+      setGenerating(false)
     }
   }
 
@@ -210,12 +228,25 @@ export default function FinanceDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3">
-        <Button onClick={handleGenerateInvoices} variant="primary">Generate Monthly Invoices</Button>
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-2">
+          <MonthPicker value={generateMonth} onChange={setGenerateMonth} />
+          <Button onClick={handleGenerateInvoices} variant="primary" disabled={generating}>
+            {generating ? 'Generating...' : 'Generate Invoices'}
+          </Button>
+        </div>
         <Button onClick={handleGenerateRecurring} variant="secondary">Generate Recurring Expenses</Button>
         <Button onClick={() => setConfirmMonthOpen(true)} variant="secondary">
           <FileCheck className="w-4 h-4 mr-1.5" /> Confirm Month-End
         </Button>
+      </div>
+
+      {/* Quick links */}
+      <div className="flex flex-wrap gap-3 items-center border-t border-zinc-200 pt-6 mt-6">
+        <span className="text-sm text-zinc-500">Quick links:</span>
+        <Link href="/finance/billing" className="inline-flex items-center justify-center font-medium rounded-lg h-8 px-3 text-xs bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">View Billing</Link>
+        <Link href="/finance/expenses" className="inline-flex items-center justify-center font-medium rounded-lg h-8 px-3 text-xs bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">View Expenses</Link>
+        <Link href="/finance/reports" className="inline-flex items-center justify-center font-medium rounded-lg h-8 px-3 text-xs bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">View Reports</Link>
       </div>
 
       {confirmMonthOpen && (

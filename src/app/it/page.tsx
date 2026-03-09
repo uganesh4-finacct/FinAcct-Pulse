@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Laptop, Monitor, AlertTriangle, Package } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -134,6 +135,13 @@ export default function ITDashboardPage() {
         </div>
       </div>
 
+      {/* Quick links */}
+      <div className="flex flex-wrap gap-3 items-center border-t border-zinc-200 pt-6">
+        <span className="text-sm text-zinc-500">Quick links:</span>
+        <Link href="/it/hardware" className="inline-flex items-center justify-center font-medium rounded-lg h-8 px-3 text-xs bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">View Hardware</Link>
+        <Link href="/it/domains" className="inline-flex items-center justify-center font-medium rounded-lg h-8 px-3 text-xs bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">View Domains</Link>
+      </div>
+
       {/* Alerts */}
       <div className="bg-white rounded-xl border border-zinc-200 p-6">
         <h2 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide mb-4">Alerts</h2>
@@ -143,9 +151,11 @@ export default function ITDashboardPage() {
               <h3 className="text-xs font-medium text-amber-700 mb-2">Hardware warranty expiring (within 30 days)</h3>
               <ul className="space-y-1">
                 {data.alerts.warranty_expiring.map((item) => (
-                  <li key={item.id} className="flex items-center gap-2 text-sm text-amber-800">
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                    {item.name || item.asset_tag || item.id} — Warranty: {item.warranty_expiry}
+                  <li key={item.id}>
+                    <Link href="/it/hardware" className="flex items-center gap-2 text-sm text-amber-800 hover:underline">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      {item.name || item.asset_tag || item.id} — Warranty: {item.warranty_expiry}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -156,9 +166,11 @@ export default function ITDashboardPage() {
               <h3 className="text-xs font-medium text-orange-700 mb-2">Domains expiring soon</h3>
               <ul className="space-y-1">
                 {data.alerts.domains_expiring.map((item) => (
-                  <li key={item.id} className="flex items-center gap-2 text-sm text-orange-800">
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                    {item.domain} — Expiry: {item.expiry_date}
+                  <li key={item.id}>
+                    <Link href="/it/domains" className="flex items-center gap-2 text-sm text-orange-800 hover:underline">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      {item.domain} — Expiry: {item.expiry_date}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -169,9 +181,11 @@ export default function ITDashboardPage() {
               <h3 className="text-xs font-medium text-red-700 mb-2">SSL certificates expiring</h3>
               <ul className="space-y-1">
                 {data.alerts.ssl_expiring.map((item) => (
-                  <li key={item.id} className="flex items-center gap-2 text-sm text-red-800">
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                    {item.domain} — SSL expiry: {item.ssl_expiry_date}
+                  <li key={item.id}>
+                    <Link href="/it/domains" className="flex items-center gap-2 text-sm text-red-800 hover:underline">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      {item.domain} — SSL expiry: {item.ssl_expiry_date}
+                    </Link>
                   </li>
                 ))}
               </ul>

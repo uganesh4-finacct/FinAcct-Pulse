@@ -11,32 +11,53 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState('all')
   const [category, setCategory] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [offset, setOffset] = useState(0)
   const router = useRouter()
 
+  const limit = 50
+
   useEffect(() => {
-    fetchNotifications()
+    setOffset(0)
+    fetchNotifications(0, true)
   }, [filter, category])
 
-  async function fetchNotifications() {
-    setLoading(true)
+  async function fetchNotifications(off = 0, replace = false) {
+    if (replace) setLoading(true)
+    else setLoadingMore(true)
     const params = new URLSearchParams()
     if (filter !== 'all') params.set('read', filter === 'read' ? 'true' : 'false')
     if (category !== 'all') params.set('category', category)
-    params.set('limit', '50')
+    params.set('limit', String(limit))
+    params.set('offset', String(off))
     const res = await fetch(`/api/notifications?${params}`)
     const data = await res.json()
-    setNotifications(data.notifications || [])
+    const list = data.notifications || []
+    if (replace) {
+      setNotifications(list)
+      setOffset(list.length)
+    } else {
+      setNotifications((prev) => [...prev, ...list])
+      setOffset((o) => o + list.length)
+    }
+    setHasMore(data.hasMore === true)
     setLoading(false)
+    setLoadingMore(false)
+  }
+
+  function loadMore() {
+    fetchNotifications(offset, false)
   }
 
   async function markAsRead(id: string) {
     await fetch(`/api/notifications/${id}/read`, { method: 'POST' })
-    fetchNotifications()
+    fetchNotifications(0, true)
   }
 
   async function deleteNotification(id: string) {
     await fetch(`/api/notifications/${id}`, { method: 'DELETE' })
-    fetchNotifications()
+    fetchNotifications(0, true)
   }
 
   return (
@@ -85,7 +106,20 @@ export default function NotificationsPage() {
             {notifications.map((n: any) => (
               <div
                 key={n.id}
-                className={`p-4 flex items-start gap-4 ${!n.read ? 'bg-violet-50/30 dark:bg-violet-950/20' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (!n.read) markAsRead(n.id)
+                  if (n.link_url) router.push(n.link_url)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    if (!n.read) markAsRead(n.id)
+                    if (n.link_url) router.push(n.link_url)
+                  }
+                }}
+                className={`p-4 flex items-start gap-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors ${!n.read ? 'bg-violet-50/30 dark:bg-violet-950/20' : ''}`}
               >
                 <div
                   className={`mt-1.5 h-2 w-2 rounded-full flex-shrink-0 ${
@@ -101,7 +135,7 @@ export default function NotificationsPage() {
                         {new Date(n.created_at).toLocaleString()}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       {n.link_url && (
                         <button
                           type="button"
@@ -137,6 +171,13 @@ export default function NotificationsPage() {
             ))}
           </div>
         )}
+          {hasMore && !loading && (
+            <div className="p-4 border-t border-slate-100 dark:border-zinc-800 text-center">
+              <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? 'Loading...' : 'Load more'}
+              </Button>
+            </div>
+          )}
       </Card>
     </div>
   )
