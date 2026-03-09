@@ -39,7 +39,7 @@ export default async function HRDashboardPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#09090b', letterSpacing: '-0.02em' }}>
-            HR & Hiring Dashboard
+            Human Resource Dashboard
           </h1>
           <p style={{ fontSize: '12.5px', color: '#71717a', marginTop: 4 }}>{monthLabel}</p>
         </div>

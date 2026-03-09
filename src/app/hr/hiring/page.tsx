@@ -456,7 +456,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterPosStatus}
                     onChange={(e) => setFilterPosStatus(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[140px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[160px]"
                   >
                     <option value="">All</option>
                     {POSITION_STATUSES.map((s) => (
@@ -471,7 +471,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterPosPriority}
                     onChange={(e) => setFilterPosPriority(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[140px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[160px]"
                   >
                     <option value="">All</option>
                     {PRIORITIES.map((p) => (
@@ -486,7 +486,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterPosIndustry}
                     onChange={(e) => setFilterPosIndustry(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[140px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[160px]"
                   >
                     <option value="">All</option>
                     {industries.map((i) => (
@@ -591,7 +591,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterPipelinePosition}
                     onChange={(e) => setFilterPipelinePosition(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[180px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[180px]"
                   >
                     <option value="">All</option>
                     {positions.map((p) => (
@@ -606,7 +606,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterPipelineSource}
                     onChange={(e) => setFilterPipelineSource(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[140px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[160px]"
                   >
                     <option value="">All</option>
                     {sources.map((s) => (
@@ -651,7 +651,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterCandPosition}
                     onChange={(e) => setFilterCandPosition(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[180px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[180px]"
                   >
                     <option value="">All</option>
                     {positions.map((p) => (
@@ -666,7 +666,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterCandStage}
                     onChange={(e) => setFilterCandStage(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[140px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[160px]"
                   >
                     <option value="">All</option>
                     {stages.map((s) => (
@@ -681,7 +681,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterCandStatus}
                     onChange={(e) => setFilterCandStatus(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[140px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[160px]"
                   >
                     <option value="">All</option>
                     {CANDIDATE_STATUSES.map((s) => (
@@ -696,7 +696,7 @@ export default function HiringTrackerPage() {
                   <select
                     value={filterCandSource}
                     onChange={(e) => setFilterCandSource(e.target.value)}
-                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[140px]"
+                    className="h-10 px-3 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 min-w-[120px] max-w-[160px]"
                   >
                     <option value="">All</option>
                     {sources.map((s) => (

@@ -162,14 +162,14 @@ export default function ITDomainsPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]">
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="expired">Expired</option>
           <option value="cancelled">Cancelled</option>
           <option value="pending_renewal">Pending Renewal</option>
         </select>
-        <input type="text" value={registrarFilter} onChange={e => setRegistrarFilter(e.target.value)} placeholder="Filter by registrar..." className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[180px]" />
+        <input type="text" value={registrarFilter} onChange={e => setRegistrarFilter(e.target.value)} placeholder="Filter by registrar..." className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[140px] max-w-[200px]" />
       </div>
 
       <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">

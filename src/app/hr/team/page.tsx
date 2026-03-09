@@ -402,15 +402,15 @@ export default function TeamDirectoryPage() {
       {tab === 'all' && (
         <div>
           <div className="flex gap-3 mb-4 flex-wrap">
-            <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+            <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
               <option value="">All entities</option>
               {ENTITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
               <option value="">All roles</option>
               {SYSTEM_ROLES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
               <option value="">All statuses</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>

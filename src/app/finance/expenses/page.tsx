@@ -251,8 +251,8 @@ export default function FinanceExpensesPage() {
       </div>
       <div className="flex flex-wrap gap-3">
         <MonthPicker value={month} onChange={setMonth} />
-        <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All entities</option><option value="US">US</option><option value="India">India</option></select>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="paid">Paid</option></select>
+        <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]"><option value="">All entities</option><option value="US">US</option><option value="India">India</option></select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]"><option value="">All statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="paid">Paid</option></select>
       </div>
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
         <SortableTable

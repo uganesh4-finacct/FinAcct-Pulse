@@ -193,17 +193,17 @@ export default function SettingsUsersPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+        <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
           {ROLE_OPTIONS.map((o) => (
             <option key={o.value || 'any'} value={o.value}>{o.label}</option>
           ))}
         </select>
-        <select value={filterEntity} onChange={(e) => setFilterEntity(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+        <select value={filterEntity} onChange={(e) => setFilterEntity(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
           {ENTITY_OPTIONS.map((o) => (
             <option key={o.value || 'any'} value={o.value}>{o.label}</option>
           ))}
         </select>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
           {STATUS_FILTER_OPTIONS.map((o) => (
             <option key={o.value || 'any'} value={o.value}>{o.label}</option>
           ))}

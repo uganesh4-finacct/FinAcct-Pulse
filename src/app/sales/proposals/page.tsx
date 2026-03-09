@@ -107,7 +107,7 @@ export default function SalesProposalsPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900"
         >
           <option value="">All statuses</option>
           {STATUSES.map((s) => (

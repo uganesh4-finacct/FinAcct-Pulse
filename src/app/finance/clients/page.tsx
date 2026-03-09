@@ -200,12 +200,12 @@ export default function FinanceClientsPage() {
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
           placeholder="Search by client name..."
-          className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white min-w-[200px]"
+          className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white min-w-[140px] max-w-[200px]"
         />
         <select
           value={verticalFilter}
           onChange={(e) => setVerticalFilter(e.target.value)}
-          className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white"
+          className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white min-w-[120px] max-w-[160px]"
         >
           {VERTICALS.map((v) => (
             <option key={v.value || 'all'} value={v.value}>
@@ -216,7 +216,7 @@ export default function FinanceClientsPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white"
+          className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white min-w-[120px] max-w-[160px]"
         >
           <option value="">All</option>
           <option value="configured">Configured</option>

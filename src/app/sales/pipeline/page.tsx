@@ -149,12 +149,12 @@ export default function SalesPipelinePage() {
           value={searchCompany}
           onChange={(e) => setSearchCompany(e.target.value)}
           placeholder="Search by company..."
-          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[180px] bg-white dark:bg-zinc-900"
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[140px] max-w-[200px] bg-white dark:bg-zinc-900"
         />
         <select
           value={filterStage}
           onChange={(e) => setFilterStage(e.target.value)}
-          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900"
         >
           <option value="">All stages</option>
           {STAGES.map((s) => (
@@ -164,7 +164,7 @@ export default function SalesPipelinePage() {
         <select
           value={filterOwner}
           onChange={(e) => setFilterOwner(e.target.value)}
-          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900"
+          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900"
         >
           <option value="">All owners</option>
           {teamMembers.map((m) => (

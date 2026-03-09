@@ -98,13 +98,13 @@ export default function CampaignsPage() {
       <SubNav />
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
           <option value="">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>{campaignStatusConfig[s].label}</option>
           ))}
         </select>
-        <select value={filterPlatform} onChange={(e) => setFilterPlatform(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+        <select value={filterPlatform} onChange={(e) => setFilterPlatform(e.target.value)} className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm min-w-[120px] max-w-[160px] bg-white dark:bg-zinc-900">
           <option value="">All platforms</option>
           {PLATFORMS.map((p) => (
             <option key={p} value={p}>{p}</option>

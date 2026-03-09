@@ -207,14 +207,14 @@ export default function FinanceBillingPage() {
 
       <div className="flex flex-wrap gap-3">
         <MonthPicker value={month} onChange={setMonth} />
-        <select value={filterClient} onChange={e => setFilterClient(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+        <select value={filterClient} onChange={e => setFilterClient(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]">
           <option value="">All clients</option>
           {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]">
           {PAYMENT_STATUS_OPTIONS.map(o => <option key={o.value || 'all'} value={o.value}>{o.label}</option>)}
         </select>
-        <select value={filterVertical} onChange={e => setFilterVertical(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">
+        <select value={filterVertical} onChange={e => setFilterVertical(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]">
           <option value="">All verticals</option>
           {verticals.map(v => <option key={v} value={v}>{v}</option>)}
         </select>

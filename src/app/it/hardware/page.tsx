@@ -255,12 +255,12 @@ export default function ITHardwarePage() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search by name or asset tag..."
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[200px]"
+          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[140px] max-w-[200px]"
         />
-        <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All entities</option><option value="US">US</option><option value="India">India</option></select>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All types</option>{HARDWARE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All statuses</option>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
-        <select value={assignedFilter} onChange={e => setAssignedFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"><option value="">All</option><option value="assigned">Assigned</option><option value="unassigned">Unassigned</option></select>
+        <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]"><option value="">All entities</option><option value="US">US</option><option value="India">India</option></select>
+        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]"><option value="">All types</option>{HARDWARE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]"><option value="">All statuses</option>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
+        <select value={assignedFilter} onChange={e => setAssignedFilter(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm min-w-[120px] max-w-[160px]"><option value="">All</option><option value="assigned">Assigned</option><option value="unassigned">Unassigned</option></select>
       </div>
 
       <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">

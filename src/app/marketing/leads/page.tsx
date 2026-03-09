@@ -229,7 +229,7 @@ export default function LeadsPage() {
               <select
                 value={filterSource}
                 onChange={(e) => setFilterSource(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm min-w-[120px] max-w-[160px]"
               >
                 <option value="">All</option>
                 {SOURCE_OPTIONS.map((o) => (
@@ -242,7 +242,7 @@ export default function LeadsPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm min-w-[120px] max-w-[160px]"
               >
                 <option value="">All</option>
                 {STATUS_OPTIONS.map((s) => (
@@ -256,7 +256,7 @@ export default function LeadsPage() {
                 type="date"
                 value={filterDateFrom}
                 onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm min-w-[120px] max-w-[160px]"
               />
             </div>
             <div>
@@ -265,7 +265,7 @@ export default function LeadsPage() {
                 type="date"
                 value={filterDateTo}
                 onChange={(e) => setFilterDateTo(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm"
+                className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm min-w-[120px] max-w-[160px]"
               />
             </div>
           </div>

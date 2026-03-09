@@ -70,9 +70,9 @@ const OPERATIONS: NavSection = {
   ],
 }
 
-// 5. HR & HIRING
+// 5. Human Resource
 const HR_HIRING: NavSection = {
-  group: 'HR & HIRING',
+  group: 'Human Resource',
   collapsible: true,
   storageKey: 'sidebar_collapsed_HR',
   module: 'HR',
